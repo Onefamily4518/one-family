@@ -1,0 +1,191 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+
+    $data_ = array();
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    $message = [];
+    if(!empty($inputdata)){
+
+        $follow_type = $inputdata['type'];
+        $follower_id = $inputdata['loggedUser'];
+        $following_id = $inputdata['followingUser'];
+        $following_data = Wo_UserData($following_id);
+        $follower_data = Wo_UserData($follower_id);
+
+        $isUserExist = Wo_UserData($follower_id);
+        
+        if(empty($isUserExist)){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "User was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+        $isUserExist = Wo_UserData($following_id);
+        
+        if(empty($isUserExist)){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "User was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+        if($follow_type == 'follow'){
+            
+            $already_follow = Wo_Already_Following($following_id, $follower_id);
+            
+            if($already_follow == 1)
+            {   
+                $message = [
+                    'status' => 200,
+                    'message' => 'Follow Success',
+                ];
+                echo json_encode($message);
+                exit();
+            }
+
+            if($following_data ['confirm_followers'] == 0){
+                
+                $result = Wo_RegisterFollow($following_id,$follower_id);
+                
+                if($result){
+                    $message = [
+                        'status' => 200,
+                        'message' => 'Success',
+                    ];
+                    echo json_encode($message);
+                    exit();
+                }
+                else{
+                    http_response_code(404);
+                    $message = [
+                        'status' => 404,
+                        'message' => 'Failed'
+                    ];
+                    echo json_encode($message);
+                    exit();
+                }
+            }
+            elseif($following_data ['confirm_followers'] == 1){
+              
+                $result = Wo_RegisterFollow($following_id,$follower_id);
+                if($result){
+                    $message = [
+                        'status' => 200,
+                        'message' => 'Follow Request Send Success',
+                    ];
+                    echo json_encode($message);
+                    exit();
+                }
+                else{
+                    http_response_code(404);
+                    $message = [
+                        'status' => 404,
+                        'message' => 'Failed'
+                    ];
+                    echo json_encode($message);
+                    exit();
+                }
+            }
+        }
+
+        elseif($follow_type == 'unfollow'){
+            $result = Wo_DeleteFollow($following_id,$follower_id);
+            if($result){
+                $message = [
+                    'status' => 200,
+                    'message' => 'Unfollow Success',
+                ];
+                echo json_encode($message);
+            }
+            else{
+                http_response_code(404);
+                $message = [
+                    'status' => 404,
+                    'message' => 'Failed'
+                ];
+                echo json_encode($message);
+            }
+            exit();
+        }
+        elseif($follow_type == 'Accept_Request')
+        {
+            $result = Wo_AcceptFollowRequest($following_id,$follower_id);
+            if($result){
+                http_response_code(200);
+                $message = [
+                    'status' => 200,
+                    'message' => 'Follow Success',
+                ];
+                echo json_encode($message);
+            }
+            else{
+                http_response_code(404);
+                $message = [
+                    'status' => 404,
+                    'message' => 'Failed'
+                ];
+                echo json_encode($message);
+            }
+            exit();
+        }
+        elseif($follow_type == 'Reject_Request')
+        {
+            $result = Wo_DeleteFollowRequest($following_id,$follower_id);
+            if($result){
+                $message = [
+                    'status' => 200,
+                    'message' => 'Reject Request Success',
+                ];
+                echo json_encode($message);
+            }
+            else{
+                http_response_code(404);
+                $message = [
+                    'status' => 404,
+                    'message' => 'Failed'
+                ];
+                echo json_encode($message);
+            }
+            exit();
+        }
+        elseif($follow_type == 'checkUserFollow'){
+            $result = Wo_IsFollowing($following_id,$follower_id);
+            $message = [
+                'status' => 200,
+                'follow' => $result,
+            ];
+            echo json_encode($message);
+        
+            exit();
+        }
+        else{
+            http_response_code(404);
+            $message = [
+                'status' => 404,
+                'message' => 'Follow Type Invalid'
+            ];
+            echo json_encode($message);
+            exit();
+        }
+    }
+    
+}
+
+

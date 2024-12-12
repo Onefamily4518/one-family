@@ -1,0 +1,95 @@
+<?php
+// http://localhost/onefamily/updateprofileapi   --server api url
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    if(!empty($inputdata))
+    {
+        $user_id        = $inputdata['userId'];
+        $fullname       = $inputdata['fullName'];
+        $display_name   = $inputdata['displayName'];
+        $date_of_birth  = $inputdata['dateOfBirth'];
+        $gender         = $inputdata['gender'];
+        $email          = $inputdata['email'];
+        $phone_number   = $inputdata['phoneNumber'];
+        $city           = $inputdata['city'];
+
+        $isUserExist = Wo_UserData($user_id);
+
+        if(empty($isUserExist)){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "User was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+        if(empty($email) && empty($phone_number) && empty($fullname) && empty($diplay_name) && empty($date_of_birth) && empty($gender) && empty($city))
+        {
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'Input field was empty'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+        if(!empty($email))
+        {
+            $email_ex = already_email($user_id,$email);
+            http_response_code(404);
+            if($email_ex === 1){$error = ['status' => 404,'message' => 'This Email User Already Used'];
+                echo json_encode($error);exit();}
+        }
+
+        // already phone_number used in anther user check
+        if(!empty($phone_number))
+        {
+            $email_ex = already_phone_number($user_id,$phone_number);
+            http_response_code(404);
+            if($email_ex === 1){$error = ['status' => 404,'message' => 'Mobile number is not available'];
+                echo json_encode($error);exit();}
+        }
+
+            
+        $update_result = update_profile_data($user_id,$fullname,$display_name,$date_of_birth,$gender,$email,$phone_number,$city);
+        
+        if(!empty($update_result))
+        {
+            $user_data = get_user_data($update_result);
+            if(!empty($user_data))
+            {
+                echo json_encode($user_data);
+                exit();
+            }
+
+        }else{
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'User profile can\'t uploaded'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+    }else{
+        http_response_code(404);
+        $error = [
+            'status' => 404,
+            'message' => 'Enter Data'
+        ];
+        echo json_encode($error);
+        exit();
+    }
+}
+?>

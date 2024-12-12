@@ -1,0 +1,41 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    $message = [];
+    if(empty($inputdata)){
+        http_response_code(404);
+        $error = [
+            "status" => 404,
+            "message" => "Input was empty"
+        ];
+        echo json_encode($error);
+        exit();
+    }
+
+    $user_id = $inputdata['userId'];
+    $page = $inputdata['page'];
+    $perPage = $inputdata['perPage'];
+
+    $isUserExist = Wo_UserData($user_id);
+        
+    if(empty($isUserExist)){
+        http_response_code(404);
+        $error = [
+            "status" => 404,
+            "message" => "User was not exist"
+        ];
+        echo json_encode($error);
+        exit();
+    }
+
+    $result = showStory($user_id,$page,$perPage);
+    echo json_encode($result);die();
+}

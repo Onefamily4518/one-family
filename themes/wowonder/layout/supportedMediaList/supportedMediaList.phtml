@@ -1,0 +1,59 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+
+    $supportedMediaList = [
+        [
+            "title" => "Photos",
+            "type"=> "photo",
+            "postType" => "imageWithContent",
+            "isActive"=> true,
+            "allowedTypes"=> [
+                "jpeg",
+                "jpg",
+                "gif",
+                "png",
+                "webp"
+            ]
+        ],
+        [
+            "title"=> "Videos",
+            "type"=> "video",
+            "postType" => "videoWithContent",
+            "isActive"=> true,
+            "allowedTypes"=> [
+                "mp4",
+                "flv",
+                "mpeg"
+            ]
+        ],
+        [
+            "title"=> "Audios",
+            "type"=> "audio",
+            "postType" => "audioWithContent",
+            "isActive"=> true,
+            "allowedTypes"=> [
+                "mp3",
+                "wmv",
+                "midi"
+            ]
+        ]
+
+    ];
+
+    echo json_encode(
+        ['status' => 200,
+         'supportedMediaList' => $supportedMediaList
+        ]
+    );
+
+    die();
+
+}

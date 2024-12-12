@@ -1,0 +1,62 @@
+<?php
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    if(!empty($inputdata)){
+        if(!isset($inputdata['userId']) && !isset($inputdata['userProfileType'])){
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'Input field was empty'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+        
+
+        $userId = $inputdata['userId'];
+        $profileType = $inputdata['userProfileType'];
+        
+        if(!$profileType == 'Blog' || !$profileType == 'profileInfo'){
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'Profile type was not valid'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+        
+        if(!Wo_UserData($userId)){
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'User id is not exist'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+        
+        $data = getUserData($userId,$profileType);
+
+        if(!empty($data)){
+            http_response_code(200);
+            $error = [
+                'status' => 200,
+                'message' => 'Success',
+                'data'=> $data
+            ];
+            echo json_encode($error);
+            exit();  
+        }
+
+        
+        
+    }
+}

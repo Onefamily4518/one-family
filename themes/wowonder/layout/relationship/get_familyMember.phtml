@@ -1,0 +1,33 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+    
+    $data_ = array();
+    $phone = 0;
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    if(!empty($inputdata))
+    {
+        $user_id = $inputdata['user_id'];
+        $user_data = get_familydata($user_id);
+        if(!empty($user_data)){
+            echo json_encode($user_data);
+            exit();
+        }else{
+            http_response_code(400);
+            $error = ['status' => 500,'message' => 'user_data empty'];
+            echo json_encode($error);exit();
+        }
+    }
+    else{
+        http_response_code(400);
+        $error = ['status' => 400,'message' => 'post type was wrong'];
+            echo json_encode($error);exit();
+    }
+}

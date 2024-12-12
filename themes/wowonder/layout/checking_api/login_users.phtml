@@ -1,0 +1,102 @@
+<?php 
+// checking_api
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+
+{
+
+    $data_ = array();
+    $phone = 0;
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+
+    if($inputdata['loginType'] == 'loginWithMail'){
+        $email = $inputdata['email'];
+        $password = $inputdata['password'];
+            
+        if (Wo_IsBanned($email)) {
+            $errors = $error_icon . $wo['lang']['email_is_banned'];
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors = $error_icon . $wo['lang']['email_invalid_characters'];
+        }
+        if (empty($errors)) {
+
+            $result = LoginFun_email($email,$password);
+
+            if (empty($result))
+            {
+                $error = [
+                    'status' => 404,
+                    'message' => 'Not Login'
+                ];
+                echo json_encode($error);
+                exit();
+            }else{
+                
+                echo json_encode($result);
+                exit();
+            }
+             
+            }
+            else
+            {
+                $error = [
+                    'status' => 200,
+                    'message' => $errors
+                ];
+                echo json_encode($error);
+                exit();
+                } 
+    
+    }
+    elseif($inputdata['loginType'] == 'loginWithphoneNumber')
+    {
+        $phone = $inputdata['phoneNumber'];   
+        $email = '';
+        $verify_num = isValidTelephoneNumber($phone);
+        if($verify_num != 1){
+            $error = [
+                "message" => "Enter valid phone number"
+            ];
+            echo json_encode($error);
+            exit();
+        } 
+        $result = LoginFun($phone);
+        if (empty($result)) {
+            $errors = "Fail";
+            $data = [
+                'status' => 500,
+                'message' => $errors
+            ];
+            echo json_encode($data);
+            exit(); 
+        } else{
+            $errors = "Success";
+            $verification_code = $result;
+            
+                // new change in insert_verification_code function inside..
+            $result = insert_verification_code($verification_code,$email,$phone);            
+            if($result){
+                $data = [
+                'status' => 200,
+                'message' => $errors. ', OTP Sended'
+                ];
+
+                echo json_encode($data);
+                exit();
+            }
+        }  
+    }
+}
+
+// logout method:
+
+// if (!empty($_SESSION['session_key'])) {
+// 	$query = mysqli_query($sqlConnect, "DELETE FROM " .  T_APP_SESSIONS . " WHERE `session_id` = '" . Wo_Secure($_SESSION['session_key']) . "'");
+// }
+// session_destroy();

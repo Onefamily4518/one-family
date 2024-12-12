@@ -1,0 +1,177 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+
+if($request_method == "POST" || $request_method == "GET")
+{
+   
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    if(!empty($inputdata))
+    {
+        $type = $inputdata['type'];
+        $userId = $inputdata['userId'];
+        $memberId = $inputdata['memberId'];
+    }
+
+    if($_POST['type'] == 'createMember'){
+        
+        $userId = $_POST['userId'];
+        $username = $_POST['relationName'];
+        $email = $_POST['relationEmail'];//from users
+        $phoneNumber = $_POST['relationPhone'];//from users
+        $marriedStatus = $_POST['isMarried'];
+        $homeTown = $_POST['homeTown'];//from users
+      
+        $sex = $_POST['sex'];
+        $image = $_FILES['image'];
+        $relationId = $_POST['relationId'];
+
+        
+        $isUserExist = Wo_UserData($userId);
+            
+        if(empty($isUserExist)){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "User was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+
+        if(!empty($username || $relation || $sex || $marriedStatus || $relationId)){
+            if (!empty($image["tmp_name"])){
+
+                $fileInfo   = array(
+                    'file' => $image["tmp_name"],
+                    'name' => $image['name'],
+                    'size' => $image["size"],
+                    'type' => $image["type"],
+                    'types' => 'jpeg,jpg,png,bmp,gif,tiff,svg,avif,apng,heif,psd,raw,tga',
+
+                );
+                
+                $media         = Wo_ShareFile($fileInfo);
+                $upload_image = $media['filename'];
+            }else{
+                $upload_image = null;
+            }
+
+            $data = [
+                'loggedUser' => $userId,
+                'relationName' => $username,
+                'relationEmail' => $email,
+                'relationPhone'=>$phoneNumber,
+                'marriedStatus' =>$marriedStatus,
+                'homeTown' => $homeTown,
+                'relationUser' => $relationId,
+                'sex' => $sex,
+                'image' => $upload_image,
+            ];
+
+          
+            $storeRelation = addMember($data);
+
+            if($storeRelation){
+                echo json_encode([
+                    'message' => 'Member was created'
+                ]);
+                die();
+            }else{
+                http_response_code(404);
+                echo json_encode([
+                    'message' => 'Something wrong'
+                ]);
+                die();
+            }
+        }
+    }elseif($type == 'removeMember'){
+
+        $isUserExist = Wo_UserData($userId);
+            
+        if(empty($isUserExist)){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "User was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+        $result = removeMember($memberId);
+    }
+    elseif ($_POST['type'] == "updateMember"){
+        
+        $memberId = $_POST['memberId'];
+        $username = $_POST['relationName'];
+        $email = $_POST['relationEmail'];//from users
+        $phoneNumber = $_POST['relationPhone'];//from users
+        $marriedStatus = $_POST['isMarried'];
+        $homeTown = $_POST['homeTown'];//from users  
+        $sex = $_POST['sex'];
+        $image = $_FILES['image'];
+        $relation = $_POST['relation'];
+        $dob = $_POST['dateOfBirth'];
+        $dod = $_POST['dateOfDeath'];
+        $nickname = $_POST['nickname'];
+        $gender = $_POST['sex'];
+
+
+        if(!empty($memberId)){
+            if (!empty($image["tmp_name"])){
+
+                $fileInfo   = array(
+                    'file' => $image["tmp_name"],
+                    'name' => $image['name'],
+                    'size' => $image["size"],
+                    'type' => $image["type"],
+                    'types' => 'jpeg,jpg,png,bmp,gif,tiff,svg,avif,apng,heif,psd,raw,tga',
+
+                );
+                
+                $media         = Wo_ShareFile($fileInfo);
+                $upload_image = $media['filename'];
+            }else{
+                $upload_image = null;
+            }
+
+            $data = [
+                'id' => $memberId,
+                'relationName' => $username,
+                'relationEmail' => $email,
+                'relationPhone'=>$phoneNumber,
+                'marriedStatus' =>$marriedStatus,
+                'homeTown' => $homeTown,
+                'relation' => $relation,
+                'sex' => $sex,
+                'image' => $upload_image,
+                'dob' => $dob,
+                'dod' => $dod,
+                'nickname' => $nickname,
+                'sex' => $gender
+            ];
+
+          
+            $storeRelation = updateMember($data);
+
+            if($storeRelation){
+                echo json_encode([
+                    'message' => 'Relation was updated'
+                ]);
+                die();
+            }else{
+                http_response_code(404);
+                echo json_encode([
+                    'message' => 'Something wrong'
+                ]);
+                die();
+            }
+        }
+    }
+}

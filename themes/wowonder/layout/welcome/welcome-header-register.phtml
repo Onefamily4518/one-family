@@ -1,0 +1,11 @@
+<div id="welcomeheader" class="navbar-default">
+	<div class="container">
+		<?php if ($wo['config']['user_registration'] == 1): ?>
+			<ul class="nav navbar-nav navbar-right <?php echo Wo_RightToLeft('pull-right');?>">
+				<li class="absul-right">
+					<a class="mdbtn" href="<?php echo Wo_SeoLink('index.php?link1=register');?>"><?php echo $wo['lang']['register']?></a>
+				</li>
+			</ul>
+		<?php endif ?>
+	</div>
+</div>

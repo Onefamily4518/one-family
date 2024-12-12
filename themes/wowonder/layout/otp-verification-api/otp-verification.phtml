@@ -1,0 +1,73 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+    session_start();
+    $msg = array();
+    $phone = 0;
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+    
+    //otptype,email
+    if($inputdata['otp_type'] == 'two_step_verification'){
+        $email = Wo_Secure($inputdata['email']);
+        $user_otp = $inputdata['otp'];
+        //$check_otp = getLogin_otp($user_otp);
+        $check_otp = true;
+        if($check_otp){
+            $verified_email = verifiedMail($email);
+            $message = [
+                'status' => 200,
+                'message' => 'success'
+            ];
+            echo json_encode($message);
+            exit();
+        }
+        else{
+            http_response_code(401);
+            $message = [
+                'status' => 401,
+                'message' => 'otp was not valid'
+            ];
+            echo json_encode($message);
+            exit();
+        }
+        
+    }
+    elseif($inputdata['otp_type'] == 'login_otp'){
+        
+        session_start();
+        $expiryTime = $_SESSION['verificationExpiry'];
+        $user_otp = $inputdata['otp'];
+        $result = getLogin_otp($user_otp);
+        // print_r($result);
+        // die();
+        if(!empty($result) && time() <= $expiryTime){
+            // $result['statuss'] = 200;
+            // $result['message'] = 'Success';
+            // // $result = [
+            // //     'stat' => 200,
+            // //     'message' => 'Success'
+            // // ];
+            echo json_encode($result);
+                exit();
+        }
+        else{
+            http_response_code(401);
+            $data = [
+                'status' => 401,
+                'message' => 'OTP Invalid or expired'
+            ];
+            echo json_encode($data);
+                exit();
+        }
+
+    }
+
+    
+}

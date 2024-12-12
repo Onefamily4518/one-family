@@ -1,0 +1,74 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+
+    if(!empty($inputdata)){
+
+        $postId = $inputdata['postId'];
+        $userId = $inputdata['userId'];
+        $reportType = $inputdata['reportType'];
+        $report = $inputdata['report'];
+        
+        if(empty($postId || $userId || $reportType || $report)){
+            http_response_code(404);
+            echo json_encode([
+                'status' => 404,
+                'message' => 'Data was empty'
+            ]);
+            die();
+        }
+
+        $isUserExist = Wo_UserData($userId);
+
+        if(empty($isUserExist)){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "User was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+        $isPostExist = isPostExist($postId);
+
+        if(!$isPostExist){
+            http_response_code(404);
+            $error = [
+                "status" => 404,
+                "message" => "post was not exist"
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+        $isAlreadyReported = isAlreadyReported($userId,$postId);
+
+        if($isAlreadyReported){
+                http_response_code(404);
+                $error = [
+                    "status" => 404,
+                    "message" => "Already reported"
+                ];
+                echo json_encode($error);
+                exit();
+            
+        }
+
+        $report = postReport($userId,$postId,$reportType,$report);
+
+        echo json_encode($report);
+        die();
+
+    }
+
+}

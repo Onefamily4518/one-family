@@ -1,0 +1,164 @@
+<?php
+
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+    if($_POST['post_type']==='add_family')
+    {
+
+        $user_id        = $_POST['user_id'];
+        $related_to     = $_POST['related_to'];
+        // $relationship   = $_POST['relationship'];
+        $first_name     = $_POST['first_name'];
+        $last_name      = $_POST['last_name'];
+        $date_of_birth  = $_POST['date_of_birth'];
+        $gender         = $_POST['gender'];
+        $email          = $_POST['email'];
+        $phone_number   = $_POST['phone_number'];
+        $image          = $_FILES["image"];
+
+        // phone_number or email is empty check..
+        if(empty($related_to))
+        {
+            http_response_code(404);
+            $error = ['status' => 404,'message' => 'related_to is empty'];
+            echo json_encode($error);exit();
+        }
+
+        // phone_number or email is empty check..
+        if(empty($email) && empty($phone_number))
+        {   
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'email or phone_number is empty'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+
+        // first name is empty check..
+        if(empty($first_name))
+        {
+            http_response_code(404);
+            $error = [
+                'status' => 404,
+                'message' => 'first name is empty'
+            ];
+            echo json_encode($error);
+            exit();
+        }
+
+        // last name is empty check..
+        if(empty($last_name))
+        {
+            http_response_code(404);
+            $error = ['status' => 404,'message' => 'last name is empty'];
+            echo json_encode($error);exit();
+        }
+
+
+        // date_of_birth is empty check..
+        if(empty($date_of_birth))
+        {
+            http_response_code(404);
+            $error = ['status' => 404,'message' => 'date_of_birth is empty'];
+            echo json_encode($error);exit();
+        }
+
+        // gender is empty check..
+        if(empty($gender))
+        {
+            http_response_code(404);
+            $error = ['status' => 404,'message' => 'gender is empty'];
+            echo json_encode($error);exit();
+        }
+        
+
+        $generation = '';
+
+        switch ($related_to)
+        {
+            case 'Grandfather':
+            case 'Grandmother':
+                $generation = 'pastgen-2';
+                break;
+            case 'Father':
+            case 'Mother':
+            case 'Auncle':
+            case 'Aunt':
+                $generation = 'pastgen-1';
+                break;
+            case 'Brother':
+            case 'Sister':
+            case 'Cousin':
+            case 'Friend':
+                $generation = 'presentgen';
+                break;
+            case 'Son':
+            case 'Daughter':
+                $generation = 'futuregen-1';
+                break;
+            case 'Grandson':
+            case 'Granddaughter':
+                $generation = 'futuregen-2';
+                break;
+            default:
+                $generation = '';
+                break;
+        }
+
+        $username = $first_name.$last_name;
+
+        $uplad_image = '';
+
+        if(!empty($user_id))
+        {
+            //$check_relation = Is_relation_exits($related_to,$user_id);
+            $user = is_userid($user_id);
+            if($user == 1){   
+                $image_data = Wo_Upload_FamilyImage($image["tmp_name"], $image['name'], 'family_image', $image['type'], $user_id);
+            
+                if(!empty($image_data))
+                {
+                    $uplad_image = $image_data['family_image'];
+                
+                }else{
+                    http_response_code(404);
+                    $error = ['status' => 404,'message' => 'File Empty or Formate Not Support'];
+                    echo json_encode($error);exit();
+                }
+
+                $family_result = add_family_data($user_id,$first_name,$last_name,$username,$related_to,$relationship,$date_of_birth,$gender,$email,$phone_number,$generation,$uplad_image);
+                if(!empty($family_result)){
+                    $message = [
+                        'status' => 200,
+                        'message' => 'Family member added',
+                        'inserted_id' => $family_result
+                    ];
+                    echo json_encode($message);
+                    exit();
+                }
+
+            
+                else{
+                    http_response_code(404);
+                    $error = ['status' => 404,'message' => 'user_data empty'];
+                    echo json_encode($error);exit();
+                }
+
+        }else{
+            http_response_code(404);
+            $error = ['status' => 404,'message' => 'user_id empty'];
+            echo json_encode($error); exit();
+        }
+
+        }
+    }
+}

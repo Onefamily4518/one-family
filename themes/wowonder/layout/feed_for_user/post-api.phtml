@@ -1,0 +1,64 @@
+<?php
+header('Access-Control-Allow-Origin:*');
+header('Content-type: application/json; charset=utf-8');
+header('Access-Control-Allow-Method: POST');
+header('Access-Control-Allow-Headers: Content-Type,Access-Control-Allow-Headers,Authorization,X-Request-With');
+
+
+$request_method = $_SERVER['REQUEST_METHOD'];
+if($request_method == "POST")
+{
+
+    $data_ = array();
+    $phone = 0;
+    $inputdata = json_decode(file_get_contents("php://input"),true);
+
+    $user_id = $inputdata['userId'];
+    $page = $inputdata['page'];
+    $perPage = $inputdata['perPage'];
+
+    if(empty($user_id && $page)){
+        http_response_code(404);
+        $error = [
+            "status" => 404,
+            "message" => "Input field was empty"
+        ];
+        echo json_encode($error);
+        exit();
+    }
+
+    $isUserExist = Wo_UserData($user_id);
+
+    if(empty($isUserExist)){
+        http_response_code(404);
+        $error = [
+            "status" => 404,
+            "message" => "User was not exist"
+        ];
+        echo json_encode($error);
+        exit();
+    }
+
+    // $result = get_Feed($phone);
+
+    if (empty($result)) {
+        $errors = "no data found...";
+            
+    } else{
+        $data = $result;
+    }
+    
+    
+    if (!empty($errors)) {
+        http_response_code(404);
+        echo json_encode(array(
+            'status' => '404',
+            'result' => $errors,
+        ));
+    } else if (!empty($data_)) {
+        echo json_encode($data_);
+    } else {
+        echo json_encode($data);
+    }
+    exit();
+}

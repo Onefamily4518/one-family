@@ -1,0 +1,207 @@
+<?php
+$message = '';
+// insert model :
+if(isset($_POST['submitbutton']))
+{
+    $name = $_POST['name'];
+    if(empty($name))
+    {
+        $message = 'Data is empty';
+    }
+
+    else {    
+        $isNameExist = isNameExist($name);
+        if($isNameExist)
+        {
+            $message = 'Name already exists'; 
+        }
+        else{
+            if(!(ctype_alpha($name)))
+            {
+                $message = 'Enter valid name';
+            }
+            else{
+                $result = insert_relationship_data($name);
+                if($result)
+                {
+                    $message = 'Insertion successful';
+                }else
+                {
+                    $message = 'Insertion failed';
+                }
+            }
+        }
+       
+    }
+}
+// All data get and display model :
+$results= get_relationship_data();
+if (empty($results))
+{
+    $message = 'No relationship data available';
+}
+// Edit model :
+if(isset($_GET['edit']))
+{
+    $edit_id = $_GET['edit'];
+    if(empty($edit_id))
+    {
+        $message = "no edit id ";
+    }else
+    {
+        $updata_data = get_relation_id($edit_id);
+    }
+}
+// Edit data insert model
+if(isset($_POST['updatebutton']))
+{
+    $name = $_POST['name'];
+    $id = $_POST['id'];
+   
+    if(empty($name) && empty($id))
+    {
+        $message = 'no data';
+    }
+    else 
+    {
+        if(!(ctype_alpha($name)))
+        {
+            $message = 'Enter valid name';
+        }else{
+            $result = update_relationship_data($id,$name);
+            if($result == true)
+            {
+                $message = 'update successfull';
+            }else{
+                $message = 'faild';
+            }
+        }
+    }
+}
+
+// Delete model :
+if(isset($_GET['delete']))
+{
+    $delete_id = $_GET['delete'];
+    if(empty($delete_id))
+    {
+        $message = "no edit id ";
+    }else
+    {
+        $delete_data = delete_relation_id($delete_id);
+        if($delete_data == true)
+        {
+            $message = 'delete successfull';
+        }else{
+            $message = 'fail';
+        }
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0px;
+            padding: 0px;
+        }
+        #dispalyrelation{
+            height: 100vh;
+        }
+        #insertdata{
+            height: 80vh;
+            width: 50vw;
+            display: flex;
+            justify-content:center;
+            align-item: center;
+            flex-direction:column;
+        }
+        #updatedata{
+            width: 50vw;
+            height: 80vh;
+            display: flex;
+            justify-content:center;
+            align-item: center;
+            flex-direction:column;
+        }
+        #homebutton{
+            position: fixed;
+            right:28rem;
+            bottom:40px;
+        }
+        #tableall{
+            margin-top: 15px ;
+        }
+    </style>
+</head>
+<body>
+    <!-- display all data -->
+<div class="container-fluid " id="dispalyrelation">
+              <h1 class="text-danger text-center col-12">Relationship List :</h1>
+              <div class="row ">
+                  <a href="#insertdata" class="btn btn-success col-md-2">Insert</a>
+                  <a href="#updatedata" class="btn btn-primary col-md-2 ">Update</a>
+              </div>
+              
+            <table id="tableall" class="table table-striped  text-danger table-condensed col-12">
+                <tr>
+                <th>Id</th>
+                <th>Relationship</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            <?php
+            $num = 1;
+            foreach ($results as $key => $value):
+                ?>
+            <tr>
+                <td style="padding=10px"><?php echo $num;?></td>
+                <td><?php echo $value;?></td>
+                <td><a class="btn btn-primary btn-sm" href="http://134.209.146.239/social/admin-cp/relationship-list?edit=<?php echo $key; ?>">Edit</a></td>
+                <td><a class="btn btn-danger btn-sm" href="http://134.209.146.239/social/admin-cp/relationship-list?delete=<?php echo $key; ?>">Delete</a></td>
+            </tr>
+            <?php
+            $num++;
+         endforeach; ?>
+        </table>
+    </div>
+    <!-- insert new data -->
+    <div id="insertdata" class="container-fluid"> 
+        <h1 class="text-center text-danger">Insert family list :</h1>
+       <p class="text-info h4 messageall">
+       <?php echo $message; ?>
+       </p> 
+        <form action="" method="post" class="row form-group">
+            <label class="col-6" for="">Relationship name :</label>
+            <input class="col-6 form-control " type="text" name="name" id="" require ><br>
+            <input class="col-12 btn btn-primary" type="submit" value="submit" name="submitbutton">
+        </form>
+    </div>
+    <!-- update model -->
+    <div id="updatedata" class="container-fluid "> 
+        <h1 class="text-center text-danger">Update family list :</h1>
+        <p  class="text-info h4 messageall">
+       <?php echo $message; ?>
+       </p> 
+        <form action="" method="post" class="row form-group">
+            <label class="col-6" for="">Relationship id :</label>
+            <input class="col-6 form-control text-danger" type="text" value="<?php echo $updata_data['r_id'];?>" name="id" id="" readonly ><br>
+            <label class="col-6" for="">Relationship name :</label>
+            <input class="col-6 form-control" type="text" value="<?php echo $updata_data['relation_ship'];?>" name="name" id="" require ><br>
+            <input type="submit" value="submit" class="col-12 btn btn-success" name="updatebutton">
+        </form>
+    </div>
+    <a href="#dispalyrelation" id="homebutton" class="btn btn-primary btn-sm">Home</a>
+</body>
+</html>
+<script>
+    $(document).ready(function(){
+       $('.messageall').hide(3000);
+    });
+</script>
